@@ -69,3 +69,30 @@ for(idx in 1:9){
   popViewport()
 }
 ```
+
+### with NA
+
+```
+grid.newpage()
+
+pushViewport(viewport(layout=grid.layout(
+  nrow=5,ncol=4,
+  widths=unit(c(5,5,5,5),c("lines","null","null","null")),
+  heights=unit(c(1,1,1,2,1),c("lines","lines","null","null","lines")))))
+
+my_layout<-rbind(
+  c(1,1,1,2),
+  c(1,1,1,3),
+  c(4,4,5,6),
+  c(7,7,5,8),
+  c(7,7,9,NA))
+
+for(idx in 1:9){
+  pushViewport(viewport(
+    layout.pos.row=which(apply(my_layout==idx,1,any)),
+    layout.pos.col=which(apply(my_layout==idx,2,any))))
+  grid.rect()
+  grid.text(idx)
+  popViewport()
+}
+```
