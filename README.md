@@ -96,3 +96,18 @@ for(idx in 1:9){
   popViewport()
 }
 ```
+
+## plotViewport/dataViewport
+
+```
+grid.rect(gp = gpar(lty = "dashed"))
+x <- y <- 1:10
+pushViewport(plotViewport(c(5.1, 4.1, 4.1, 2.1)))
+pushViewport(dataViewport(x, y))
+grid.rect()
+grid.xaxis()
+grid.yaxis()
+grid.points(x, y)
+grid.text("1:10", x = unit(-3, "lines"), rot = 90)
+popViewport(2)
+```
