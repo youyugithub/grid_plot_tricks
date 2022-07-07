@@ -111,3 +111,44 @@ grid.points(x, y)
 grid.text("1:10", x = unit(-3, "lines"), rot = 90)
 popViewport(2)
 ```
+## Table
+```
+df<-data.frame(
+  color=c("black","red","blue"),
+  text=LETTERS[1:3],
+  percent=c(0.3,0.4,0.6))
+
+myborder<-unit(c(0.1,0.5,0.1,0.5),"lines")
+textvp<-viewport()
+percentvp<-viewport(width=unit(1,"lines"),xscale=c(-0.05,1.05),yscale=c(-0.05,1.05))
+symbolvp<-viewport(width=unit(1,"lines"))
+
+grid.newpage()
+mylegend<-frameGrob(
+  layout=grid.layout(
+    nrow=3,ncol=3,
+    widths=unit(rep(5,3),"lines"),
+    height=unit(rep(2,3),"lines")))
+for(ii in 1:3){
+  mylegend<-packGrob(
+    mylegend,
+    linesGrob(
+      x=c(0,1),y=c(0.5,0.5),
+      vp=symbolvp,
+      gp=gpar(col=df$symbol[ii],lwd=1.5)),
+    row=ii,col=1,border=myborder)
+  mylegend<-packGrob(
+    mylegend,
+    textGrob(df$text[ii]),
+    row=ii,col=2,border=myborder)
+  
+  p_left<-rectGrob(x=0,y=0.5,width=df$percent[ii],just="left",gp=gpar(fill="lightsteelblue1"))
+  p_right<-rectGrob(x=1,y=0.5,width=1-df$percent[ii],just="right",gp=gpar(fill="coral1"))
+  p_text<-textGrob(df$percent[ii])
+  mylegend<-packGrob(
+    mylegend,
+    gTree(children=gList(p_left,p_right,p_text)),
+    row=ii,col=3,border=myborder)
+}
+grid.draw(mylegend)
+```
