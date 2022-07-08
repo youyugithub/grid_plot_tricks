@@ -152,3 +152,65 @@ for(ii in 1:3){
 }
 grid.draw(mylegend)
 ```
+
+## best table example
+```
+my_table_names<-list(
+  "",
+  "Assay",
+  "% T1D Free\n0 AB",
+  "% T1D Free\n1 AB",
+  "% T1D Free\n2+ AB",
+  expression(paste("Spearman's ",rho)),
+  "AUC")
+
+myborder<-unit(c(0.1,0.1,0.1,0.1),"lines")
+symbolvp<-viewport(width=unit(1,"lines"))
+mylegend<-frameGrob()
+
+for(jj in 1:length(my_table_names)){
+  mylegend<-packGrob(mylegend,textGrob(my_table_names[[jj]],gp=gpar(cex=0.8)),row=1,col=jj,border=myborder)
+}
+for(ii in 1:nrow(df_npositive_ROC)){
+  a_table<-df_npositive_ROC$table[[ii]]
+  # col 1
+  col1<-linesGrob(
+    x=c(0,1),y=c(0.5,0.5),
+    vp=symbolvp,
+    gp=gpar(col=all_colors[ii],lwd=1.5))
+  mylegend<-packGrob(mylegend,col1,row=ii+1,col=1,border=myborder)
+  
+  # col 2
+  col2<-textGrob(df_npositive_ROC$name[ii],gp=gpar(cex=0.8))
+  mylegend<-packGrob(mylegend,col2,row=ii+1,col=2,border=myborder)
+  
+  # cols 3-5
+  for(jj in 1:3){
+    
+    p_left<-rectGrob(x=0,y=0.5,width=a_table[jj,1]/sum(a_table[jj,]),just="left",gp=gpar(fill="lightsteelblue1"))
+    p_right<-rectGrob(x=1,y=0.5,width=a_table[jj,2]/sum(a_table[jj,]),just="right",gp=gpar(fill="coral1"))
+    p_text<-textGrob(paste0(num_to_str(a_table[jj,1]/sum(a_table[jj,])*100,1),"%"),gp=gpar(cex=0.8))
+    
+    mylegend<-packGrob(
+      mylegend,
+      gTree(children=gList(p_left,p_right,p_text)),
+      row=ii+1,col=2+jj,border=myborder)
+  }
+  
+  # col 6
+  col6<-textGrob(num_to_str(df_npositive_ROC$cor[ii],digits=3),gp=gpar(cex=0.8))
+  mylegend<-packGrob(mylegend,col6,row=ii+1,col=6,border=myborder)
+  
+  # col7
+  col7<-textGrob(num_to_str(df_npositive_ROC$auc[ii],digits=3),gp=gpar(cex=0.8))
+  mylegend<-packGrob(mylegend,col7,row=ii+1,col=7,border=myborder)
+}
+
+grid.newpage()
+mylegend$framevp<-viewport(layout=grid.layout(
+  nrow=dim(mylegend$framevp$layout$respect.mat)[1],
+  ncol=dim(mylegend$framevp$layout$respect.mat)[2],
+  widths=unit(c(2,7,4,4,4,3,3),"lines"),
+  heights=unit(rep(1.5,6),"lines")))
+
+```
