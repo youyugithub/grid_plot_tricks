@@ -214,3 +214,18 @@ mylegend$framevp<-viewport(layout=grid.layout(
   heights=unit(rep(1.5,6),"lines")))
 
 ```
+
+
+## frameGrob good example
+
+library(grid)
+fg<-frameGrob()
+fg<-packGrob(fg,rectGrob(gp=gpar(fill=adjustcolor("red",0.2))),row=1,col=1)
+fg<-packGrob(fg,rectGrob(gp=gpar(fill=adjustcolor("blue",0.2))),row=1,col=2)
+fg<-packGrob(fg,rectGrob(gp=gpar(fill=adjustcolor("yellow",0.2))),row=1,col=3)
+fg<-packGrob(fg,rectGrob(gp=gpar(fill=adjustcolor("green",0.2))),row=1,col=4)
+
+grid.newpage()
+pushViewport(viewport(layout=grid.layout(nrow=1,ncol=4,widths=unit(c(0.3,0.2,0.1,0.4),"native"),heights=unit(1,"cm"))))
+grid.draw(fg)
+
