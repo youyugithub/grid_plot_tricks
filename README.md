@@ -216,7 +216,7 @@ mylegend$framevp<-viewport(layout=grid.layout(
 ```
 
 
-## frameGrob good example
+## frameGrob example (sometimes does not work)
 ```
 library(grid)
 fg<-frameGrob()
@@ -228,4 +228,44 @@ fg<-packGrob(fg,rectGrob(gp=gpar(fill=adjustcolor("green",0.2))),row=1,col=4)
 grid.newpage()
 pushViewport(viewport(layout=grid.layout(nrow=1,ncol=4,widths=unit(c(0.3,0.2,0.1,0.4),"native"),heights=unit(1,"cm"))))
 grid.draw(fg)
+```
+not successfull either
+```
+library(grid)
+fg<-frameGrob()
+fg<-packGrob(fg,rectGrob(gp=gpar(fill=adjustcolor("red",0.2))),row=1,col=1)
+fg<-packGrob(fg,rectGrob(gp=gpar(fill=adjustcolor("blue",0.2))),row=1,col=2)
+
+grid.newpage()
+grid.draw(grob(fg,vp=viewport(layout=grid.layout(
+  nrow=1,ncol=2,widths=unit(c(0.3,0.2),"native"),heights=unit(1,"cm")))))
+
+fg2<-fg
+fg2$framevp<-viewport(layout=grid.layout(
+  nrow=1,ncol=2,widths=unit(c(0.3,0.2),"in"),heights=unit(1,"cm")))
+
+
+grid.newpage()
+
+a_gtable<-frameGrob()
+fg1<-fg;fg2<-fg;fg3<-fg;fg4<-fg
+fg1$framevp<-viewport(layout=grid.layout(
+  nrow=1,ncol=2,widths=unit(c(0.3,0.2),"in"),heights=unit(1,"cm")))
+fg2$framevp<-viewport(layout=grid.layout(
+  nrow=1,ncol=2,widths=unit(c(0.3,0.2),"in"),heights=unit(1,"cm")))
+fg3$framevp<-viewport(layout=grid.layout(
+  nrow=1,ncol=2,widths=unit(c(0.3,0.2),"in"),heights=unit(1,"cm")))
+fg4$framevp<-viewport(layout=grid.layout(
+  nrow=1,ncol=2,widths=unit(c(0.3,0.2),"in"),heights=unit(1,"cm")))
+a_gtable<-packGrob(a_gtable,fg1,row=1,col=1)
+a_gtable<-packGrob(a_gtable,fg2,row=2,col=1)
+a_gtable<-packGrob(a_gtable,fg3,row=3,col=1)
+a_gtable<-packGrob(a_gtable,fg4,row=4,col=1)
+
+a_gtable$framevp<-viewport(layout=grid.layout(
+  nrow=4,ncol=1,
+  widths=unit(5,"lines"),
+  heights=unit(5,"lines")))
+grid.draw(a_gtable)
+
 ```
