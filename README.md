@@ -269,3 +269,37 @@ a_gtable$framevp<-viewport(layout=grid.layout(
 grid.draw(a_gtable)
 
 ```
+
+## (Good) a table of percent bars
+
+```
+a_frame<-frameGrob()
+a_frame<-packGrob(a_frame,rectGrob(gp=gpar(col=NA,fill="red",alpha=0.5)),side="right")
+a_frame<-packGrob(a_frame,rectGrob(gp=gpar(col=NA,fill="blue",alpha=0.5)),side="right")
+
+p1<-gTree(children=gList(
+  rectGrob(),
+  gTree(children=gList(a_frame),vp=viewport(layout=grid.layout(ncol=2,nrow=1,widths=unit(c(1,3),"null"))))))
+p2<-gTree(children=gList(
+  rectGrob(),
+  gTree(children=gList(a_frame),vp=viewport(layout=grid.layout(ncol=2,nrow=1,widths=unit(c(2,3),"null"))))))
+p3<-gTree(children=gList(
+  rectGrob(),
+  gTree(children=gList(a_frame),vp=viewport(layout=grid.layout(ncol=2,nrow=1,widths=unit(c(5,3),"null"))))))
+p4<-gTree(children=gList(
+  rectGrob(),
+  gTree(children=gList(a_frame),vp=viewport(layout=grid.layout(ncol=2,nrow=1,widths=unit(c(0.7,3),"null"))))))
+
+frame_new<-frameGrob()
+frame_new<-packGrob(frame_new,p1,side="bottom")
+frame_new<-packGrob(frame_new,p2,side="bottom")
+frame_new<-packGrob(frame_new,p3,side="bottom")
+frame_new<-packGrob(frame_new,p4,side="bottom")
+
+frame_new$framevp<-viewport(
+  height=unit(4,"cm"),width=unit(4,"cm"),
+  layout=grid.layout(4,1))
+
+grid.newpage()
+grid.draw(frame_new)
+```
