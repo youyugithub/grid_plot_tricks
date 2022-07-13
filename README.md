@@ -305,3 +305,73 @@ grid.draw(frame_new)
 ```
 ### gtable
 gtable: https://cran.r-project.org/web/packages/gridExtra/vignettes/gtable.html
+
+## percent grob
+```
+percentGrob<-function(nn){
+  a_rect_frame<-frameGrob()
+  a_rect_frame<-packGrob(a_rect_frame,rectGrob(gp=gpar(col=NA,fill="coral1",alpha=0.5)),side="right")
+  a_rect_frame<-packGrob(a_rect_frame,rectGrob(gp=gpar(col=NA,fill="lightsteelblue1",alpha=0.5)),side="right")
+  a_pp<-nn[2]/sum(nn)
+  gTree(children=gList(
+    gTree(
+      children=gList(a_rect_frame),
+      vp=viewport(layout=grid.layout(ncol=2,nrow=1,widths=unit(c(a_pp,1-a_pp),"null")))),
+    textGrob(paste0(num_to_str(a_pp*100,1),"%"))))
+}
+
+myborder<-unit(c(0.1,0.1,0.1,0.1),"lines")
+symbolvp<-viewport(width=unit(1,"lines"))
+
+mylegend1<-frameGrob()
+
+for(ii in 1:nrow(df_npositive_ROC)){
+  a_table<-df_npositive_ROC$table[[ii]]
+  
+  # col 1-2
+  col1<-linesGrob(
+    x=c(0,1),y=c(0.5,0.5),
+    vp=symbolvp,gp=gpar(col=all_colors[ii],lwd=1.5))
+  col2<-textGrob(df_npositive_ROC$name[ii])
+  mylegend1<-packGrob(mylegend1,col1,row=ii,col=1,border=myborder)
+  mylegend1<-packGrob(mylegend1,col2,row=ii,col=2,border=myborder)
+  
+  # col 3-6
+  for(jj in 1:3){
+    mylegend1<-packGrob(
+      mylegend1,
+      textGrob(sum(a_table[jj,])),
+      row=ii,col=1+2*jj,border=myborder)
+    mylegend1<-packGrob(
+      mylegend1,
+      percentGrob(a_table[jj,]),
+      row=ii,col=2+2*jj,border=myborder)
+  }
+}
+
+mylegend1_label<-frameGrob(layout=grid.layout(nrow=2,ncol=8))
+mylegend1_label<-packGrob(mylegend1_label,textGrob(""),row=1,col=1:2)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("AB-"),row=1,col=3:4)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("1 AB+"),row=1,col=5:6)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("2+ AB+"),row=1,col=7:8)
+mylegend1_label<-packGrob(mylegend1_label,textGrob(""),row=2,col=1)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("Assay"),row=2,col=2)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("n"),row=2,col=3)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("% T1D"),row=2,col=4)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("n"),row=2,col=5)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("% T1D"),row=2,col=6)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("n"),row=2,col=7)
+mylegend1_label<-packGrob(mylegend1_label,textGrob("% T1D"),row=2,col=8)
+
+mylegend1$framevp<-
+  viewport(layout=grid.layout(
+    nrow=5,ncol=8,
+    widths=unit(c(1,6,2,3,2,3,2,3),"lines"),
+    heights=unit(rep(1.5,5),"lines")))
+
+mylegend1_label$framevp<-
+  viewport(layout=grid.layout(
+    nrow=2,ncol=8,
+    widths=unit(c(1,6,2,3,2,3,2,3),"lines"),
+    heights=unit(c(1.5,1.5),"lines")))
+```
