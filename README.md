@@ -417,6 +417,12 @@ grid.draw(mylegend)
 ```
 ## Best legend example
 ```
+  mylegend1<-frameGrob()
+  for(ii in 1:nrow(df_ROC)){
+    mylegend1<-packGrob(mylegend1,linesGrob(x=c(0,1),y=c(0.5,0.5),vp=symbolvp,gp=gpar(col=all_colors[ii],lwd=1.5)),row=ii,col=1,border=myborder)
+    mylegend1<-packGrob(mylegend1,textGrob(df_ROC$name[ii],x=0,just="left"),row=ii,col=2,border=myborder)
+  }
+
   mylegend2<-frameGrob()
   mylegend2<-packGrob(mylegend2,pointsGrob(x=0.5,y=0.5,vp=symbolvp,size=unit(7,"points"),pch=24,gp=gpar(col="black",fill="white",lwd=1.5)),row=1,col=1,border=myborder)
   mylegend2<-packGrob(mylegend2,pointsGrob(x=0.5,y=0.5,vp=symbolvp,size=unit(7,"points"),pch=21,gp=gpar(col="white",fill="black",lwd=1.5)),row=2,col=1,border=myborder)
