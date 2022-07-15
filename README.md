@@ -384,3 +384,34 @@ grid.draw(gTree(
     rectGrob(vp=viewport(layout.pos.row=1,layout.pos.col=2))),
   vp=viewport(layout=grid.layout(1,2))))
 ```
+## best table example
+```
+df<-data.frame(a=c("AA","bb","Cc"),b=c(1,2.5,3),c=c(0.2,0.5,0.6))
+
+mylegend<-frameGrob()
+for(ii in 1:nrow(df)){
+  
+  col1<-gTree(children=gList(rectGrob(),textGrob(df$a[ii])))
+  
+  g1<-gTree(
+    children=gList(rectGrob(),textGrob(df$b[ii])),
+    vp=viewport(layout.pos.row=1,layout.pos.col=1))
+  g2<-gTree(
+    children=gList(rectGrob(),pointsGrob(x=unit(df$b[ii],"native"),y=unit(0.5,"native"),vp=viewport(xscale=c(0.8,3.2)))),
+    vp=viewport(layout.pos.row=1,layout.pos.col=2))
+  col2<-gTree(children=gList(g1,g2),vp=viewport(layout=grid.layout(1,2)))
+  
+  g1<-rectGrob(gp=gpar(fill="coral"),vp=viewport(layout.pos.row=1,layout.pos.col=1))
+  g2<-rectGrob(gp=gpar(fill="deepskyblue"),vp=viewport(layout.pos.row=1,layout.pos.col=2))
+  gb<-gTree(children=gList(g1,g2),vp=viewport(width=0.95,height=0.95,layout=grid.layout(1,2,widths=unit(c(df$c[ii],1-df$c[ii]),"null"))))
+  col3<-gTree(children=gList(rectGrob(),gb,textGrob(df$c[ii])))
+  
+  mylegend<-packGrob(mylegend,col1,row=ii,col=1)
+  mylegend<-packGrob(mylegend,col2,row=ii,col=2)
+  mylegend<-packGrob(mylegend,col3,row=ii,col=3)
+}
+
+mylegend$framevp<-viewport(
+  layout=grid.layout(3,3,widths=unit(c(6,4,4),"lines"),heights=unit(c(2,2,2),"lines")))
+grid.draw(mylegend)
+```
