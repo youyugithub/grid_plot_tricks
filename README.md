@@ -375,3 +375,12 @@ mylegend1_label$framevp<-
     widths=unit(c(1,6,2,3,2,3,2,3),"lines"),
     heights=unit(c(1.5,1.5),"lines")))
 ```
+
+## Simple Stack
+```
+grid.draw(gTree(
+  children=gList(
+    rectGrob(vp=viewport(layout.pos.row=1,layout.pos.col=1)),
+    rectGrob(vp=viewport(layout.pos.row=1,layout.pos.col=2))),
+  vp=viewport(layout=grid.layout(1,2))))
+```
