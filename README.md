@@ -435,3 +435,13 @@ grid.draw(mylegend)
     height=unit(1,"grobheight",mylegend1)+unit(2,"lines"),
     just=c(1,0)))
 ```
+## for survival plot
+```
+dostep<-function(x,y){
+  n<-length(x)
+  xrep<-rep(x,c(1,rep(2,n-1)))
+  yrep<-rep(y,c(rep(2,n-1),1))
+  result<-list(x=xrep,y=yrep)
+  return(result)
+}
+```
