@@ -445,3 +445,14 @@ dostep<-function(x,y){
   return(result)
 }
 ```
+## center a text box
+```
+grid.newpage()
+pushViewport(viewport())
+a_textGrob<-textGrob(x=0,"AAA\nBBBBB\nCCCCCCCC\nDD",just="left")
+pushViewport(viewport(
+  width=unit(1,"grobwidth",a_textGrob),
+  height=unit(1,"grobheight",a_textGrob)))
+grid.rect()
+grid.draw(a_textGrob)
+```
