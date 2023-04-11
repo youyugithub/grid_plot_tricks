@@ -456,3 +456,121 @@ pushViewport(viewport(
 grid.rect()
 grid.draw(a_textGrob)
 ```
+
+## flexible text box
+```
+value_to_axis<-function(value,at){
+  rangey<-range(value,na.rm=T)
+  a_fit<-spline(1:length(at),at,method="hyman")
+  xnew<-a_fit$x
+  ynew<-a_fit$y
+  if(rangey[1]<ynew[1]-1e-8){
+    slope<-(ynew[2]-ynew[1])/(xnew[2]-xnew[1])
+    a_y<-rangey[1]
+    a_x<-xnew[1]+(a_y-ynew[1])/slope
+    ynew<-c(a_y,ynew)
+    xnew<-c(a_x,xnew)
+  }
+  if(rangey[2]>ynew[length(ynew)]+1e-8){
+    slope<-
+      (ynew[length(ynew)]-ynew[length(ynew)-1])/
+      (xnew[length(ynew)]-xnew[length(ynew)-1])
+    a_y<-rangey[2]
+    a_x<-xnew[length(xnew)]+(a_y-ynew[length(xnew)])/slope
+    ynew<-c(ynew,a_y)
+    xnew<-c(xnew,a_x)
+  }
+  axis2value<-approxfun(xnew,ynew,rule=2)
+  value2axis<-approxfun(ynew,xnew,rule=2)
+  return(value2axis(value))
+}
+```
+
+## rotate axis
+```
+        grid.xaxis(at=tick,label=rep("",length(tick)),gp=gpar(cex=0.6))
+        grid.text(
+          label=list_tick[[idx_xx]],rot=90,
+          x=unit(tick,"native"),y=unit(-0.75,"char"),
+          just="right",gp=gpar(cex=0.6))
+
+        grid.yaxis(at=tick,label=rep("",length(tick)),gp=gpar(cex=0.6))
+        grid.text(
+          label=list_tick[[idx_yy]],
+          x=unit(-0.75,"char"),y=unit(tick,"native"),
+          just="right",gp=gpar(cex=0.6))
+
+```
+
+## matrix plot
+```
+continuous_correlation<-function(df_data,df_pos,list_at,list_tick,df_names){
+  grid.newpage()
+  # my_layout<-matrix(1:(ncol(df_data)^2),ncol(df_data),ncol(df_data))
+  my_layout<-grid.layout(ncol(df_data),ncol(df_data))
+  # pushViewport(viewport(x=0.52,y=0.52,width=0.85,height=0.85))
+  pushViewport(plotViewport(margins=c(4,4,1,1)))
+  pushViewport(viewport(layout=my_layout))
+  # df_rank<-df_data%>%mutate_all(percent_rank)
+  for(idx_xx in 1:ncol(df_data)){
+    for(idx_yy in 1:ncol(df_data)){
+      # my_pushViewport(my_layout[idx_yy,idx_xx],my_layout,xscale=c(-0.1,1.1),yscale=c(-0.1,1.1))
+      if(idx_xx==idx_yy){
+        ## name panel
+        xx<-value_to_axis(df_data[[idx_xx]],list_at[[idx_xx]])
+        yy<-value_to_axis(df_data[[idx_yy]],list_at[[idx_yy]])
+        pushViewport(dataViewport(
+          layout.pos.row=idx_yy,
+          layout.pos.col=idx_xx,xData=xx,yData=yy))
+        grid.rect()
+        grid.text(df_names[idx_xx])
+      }else if(idx_xx<idx_yy){
+        ## scatter panel
+        xx<-value_to_axis(df_data[[idx_xx]],list_at[[idx_xx]])
+        yy<-value_to_axis(df_data[[idx_yy]],list_at[[idx_yy]])
+        xxp<-df_pos[[idx_xx]]
+        yyp<-df_pos[[idx_yy]]
+        pushViewport(dataViewport(
+          layout.pos.row=idx_yy,
+          layout.pos.col=idx_xx,
+          xData=c(xx,value_to_axis(list_tick[[idx_xx]],list_at[[idx_xx]])),
+          yData=c(yy,value_to_axis(list_tick[[idx_yy]],list_at[[idx_yy]]))))
+        grid.rect()
+        grid.points(
+          x=unit(xx,"native"),y=unit(yy,"native"),size=unit(0.1,"picas"),pch=16,
+          gp=gpar(col=ifelse(xor(xxp,yyp),"darkslategray4","brown3")))
+        grid.lines(x=unit(max(xx[!xxp],na.rm=TRUE),"native"),gp=gpar(lty=3))
+        grid.lines(y=unit(max(yy[!yyp],na.rm=TRUE),"native"),gp=gpar(lty=3))
+      }else{
+        ## correlation panel
+        pushViewport(viewport(
+          layout.pos.row=idx_yy,
+          layout.pos.col=idx_xx,xscale=c(-0.1,1.1),yscale=c(-0.1,1.1)))
+        grid.rect()
+        xx<-df_data[[idx_xx]]
+        yy<-df_data[[idx_yy]]
+        plot_cor_circle(cor(xx,yy,method="spearman",use="pairwise.complete.obs"))
+      }
+      if(idx_yy==nrow(my_layout)){
+        tick<-value_to_axis(list_tick[[idx_xx]],at=list_at[[idx_xx]])
+        grid.xaxis(at=tick,label=rep("",length(tick)),gp=gpar(cex=0.6))
+        grid.text(
+          label=list_tick[[idx_xx]],rot=90,
+          x=unit(tick,"native"),y=unit(-0.75,"char"),
+          just="right",gp=gpar(cex=0.6))
+      }
+      if(idx_xx==1){
+        tick<-value_to_axis(list_tick[[idx_yy]],at=list_at[[idx_yy]])
+        grid.yaxis(at=tick,label=rep("",length(tick)),gp=gpar(cex=0.6))
+        grid.text(
+          label=list_tick[[idx_yy]],
+          x=unit(-0.75,"char"),y=unit(tick,"native"),
+          just="right",gp=gpar(cex=0.6))
+      }
+      popViewport(1)
+    }
+  }
+  grid.text("Scaled Value in Percentile",x=0.5,y=unit(-2.5,"lines"))
+  grid.text("Scaled Value in Percentile",x=unit(-2.5,"lines"),y=0.5,rot=90)
+}
+```
