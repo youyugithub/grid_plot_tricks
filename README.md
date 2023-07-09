@@ -585,3 +585,17 @@ continuous_correlation<-function(df_data,df_pos,list_at,list_tick,df_names){
 ```
 textGrob(df_temp$name[ii],x=1,just="right")
 ```
+
+## viewport stack
+```
+tree <- vpTree(viewport(w=0.8, h=0.8, name="A"),
+               vpList(vpStack(viewport(x=0.1, y=0.1, w=0.5, h=0.5,
+                                       just=c("left", "bottom"), name="B"),
+                              viewport(x=0.1, y=0.1, w=0.5, h=0.5,
+                                       just=c("left", "bottom"), name="C"),
+                              viewport(x=0.1, y=0.1, w=0.5, h=0.5,
+                                       just=c("left", "bottom"), name="D")),
+                      viewport(x=0.5, w=0.4, h=0.9,
+                               just="left", name="E")))
+
+```
