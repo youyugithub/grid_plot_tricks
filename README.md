@@ -374,6 +374,12 @@ mylegend1_label$framevp<-
     nrow=2,ncol=8,
     widths=unit(c(1,6,2,3,2,3,2,3),"lines"),
     heights=unit(c(1.5,1.5),"lines")))
+
+# stack
+  mylegend<-frameGrob()
+  mylegend<-packGrob(mylegend,mylegend1_label,side="bottom",border=unit(c(0,0,1,0),"lines"))
+  mylegend<-packGrob(mylegend,mytable_ab_present,side="bottom")
+
 ```
 
 ## Simple Stack
