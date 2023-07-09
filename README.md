@@ -611,3 +611,6 @@ tree <- vpTree(viewport(w=0.8, h=0.8, name="A"),
                                just="left", name="E")))
 
 ```
+
+## manual
+https://r-universe.dev/manuals/grid.html
