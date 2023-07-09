@@ -580,3 +580,8 @@ continuous_correlation<-function(df_data,df_pos,list_at,list_tick,df_names){
   grid.text("Scaled Value in Percentile",x=unit(-2.5,"lines"),y=0.5,rot=90)
 }
 ```
+
+## Right align text
+```
+textGrob(df_temp$name[ii],x=1,just="right")
+```
