@@ -320,6 +320,18 @@ percentGrob<-function(nn){
     textGrob(paste0(num_to_str(a_pp*100,1),"%"))))
 }
 
+### this one is slightly faster
+percentGrob<-function(pp){
+  a_pp<-pmax(pp,0)
+  gTree(children=gList(
+    gTree(
+      children=gList(
+        rectGrob(gp=gpar(col=NA,fill="coral1",alpha=0.5),vp=viewport(layout.pos.row=1,layout.pos.col=1)),
+        rectGrob(gp=gpar(col=NA,fill="lightsteelblue1",alpha=0.5),vp=viewport(layout.pos.row=1,layout.pos.col=2))),
+      vp=viewport(layout=grid.layout(1,2,widths=unit(c(a_pp,1-a_pp),"null")))),
+    textGrob(paste0(num_to_str(pp*100,1),"%"))))
+}
+
 myborder<-unit(c(0.1,0.1,0.1,0.1),"lines")
 symbolvp<-viewport(width=unit(1,"lines"))
 
