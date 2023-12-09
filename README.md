@@ -614,3 +614,98 @@ tree <- vpTree(viewport(w=0.8, h=0.8, name="A"),
 
 ## manual
 https://r-universe.dev/manuals/grid.html
+
+## my boxplot
+```
+set.seed(3)
+group_name<-c("Group1","Group22","Group333","Group4444","Group55555")
+list_data<-list(
+  Group1=rnorm(50),
+  Group2=rnorm(40,2),
+  Group3=rt(30,df=3),
+  Group4=rt(30,df=2)+1,
+  rnorm(30,1,2))
+pvalue_matrix<-matrix(rexp(25,8),5,5)
+
+my_boxplot<-function(group_name,list_data,pvalue_matrix){
+  library(grid)
+  to_rectx<-function(x1,x2)c(x1,x2,x2,x1)
+  to_recty<-function(y1,y2)c(y1,y1,y2,y2)
+  
+  df_sig<-data.frame()
+  for(ii in 1:length(group_name)){
+    for(jj in 1:length(group_name)){
+      if(ii>=jj)next
+      if(pvalue_matrix[ii,jj]<0.05){
+        df_sig<-rbind(df_sig,data.frame(ii=ii,jj=jj,pvalue=pvalue_matrix[ii,jj]))
+      }
+    }
+  }
+  df_sig$star<-dplyr::case_when(
+    df_sig$pvalue<0.001~"***",
+    df_sig$pvalue<0.01~"**",
+    df_sig$pvalue<0.05~"*")
+  
+  left_margin<-unit(0,"line")
+  for(ii in 1:1:length(group_name)){
+    left_margin<-max(left_margin,convertX(unit(1,"grobwidth",textGrob(group_name[ii])),"line"))
+  }
+  
+  grid.newpage()
+  pushViewport(plotViewport(margins=c(4,1.5+as.numeric(left_margin),2,2)+0.1))
+  grid.rect()
+  pushViewport(viewport(layout=grid.layout(
+    nrow=1,ncol=2,widths=unit(c(1,nrow(df_sig)),c("null","line")))))
+  pushViewport(dataViewport(
+    yData=c(0.5,length(group_name)+0.5),
+    xData=unlist(list_data),
+    layout.pos.row=1,layout.pos.col=1))
+  for(ii in 1:length(group_name)){
+    # grid.lines(
+    #   y=c(ii,ii),x=c(x_quantile25[ii],x_quantile75[ii]),
+    #   default.units="native",
+    #   arrow=arrow(length=unit(0.3,"native"),angle=90,ends="both"))
+    # grid.points(y=ii,x=x_median[ii],size=unit(0.1,"inch"),pch=16)
+    
+    a_boxplot<-boxplot(list_data[[ii]],plot=F)
+    grid.lines(
+      x=c(a_boxplot$stats[1],a_boxplot$stats[5]),
+      y=c(ii,ii),default.units="native",gp=gpar(lwd=1.5))
+    grid.polygon(
+      x=to_rectx(a_boxplot$stats[2],a_boxplot$stats[4]),
+      y=to_recty(ii-0.4,ii+0.4),default.units="native",gp=gpar(lwd=1.5))
+    grid.lines(
+      x=c(a_boxplot$stats[3],a_boxplot$stats[3]),
+      y=c(ii-0.4,ii+0.4),default.units="native",gp=gpar(lwd=1.5))
+    grid.lines(
+      x=c(a_boxplot$stats[1],a_boxplot$stats[1]),
+      y=c(ii-0.2,ii+0.2),default.units="native",gp=gpar(lwd=1.5))
+    grid.lines(
+      x=c(a_boxplot$stats[5],a_boxplot$stats[5]),
+      y=c(ii-0.2,ii+0.2),default.units="native",gp=gpar(lwd=1.5))
+    nout<-length(a_boxplot$out)
+    if(nout>=1)grid.points(
+      x=a_boxplot$out,
+      y=rep(ii,nout),
+      default.units="native",pch=16,size=unit(5,"points"))
+    grid.text(group_name[ii],x=unit(0,"npc")-unit(1,"line"),y=unit(ii,"native"),just="right")
+  }
+  grid.xaxis();grid.yaxis(label=F)
+  popViewport()
+  pushViewport(dataViewport(
+    yData=c(0.5,length(group_name)+0.5),
+    xData=c(0,nrow(df_sig)),
+    layout.pos.row=1,layout.pos.col=2))
+  for(kk in 1:nrow(df_sig)){
+    grid.lines(
+      x=c(kk-1,kk-0.5,kk-0.5,kk-1),
+      y=c(df_sig$ii[kk],df_sig$ii[kk],df_sig$jj[kk],df_sig$jj[kk]),
+      default.units="native")
+    grid.text(
+      df_sig$star[kk],x=kk-0.5,y=mean(c(df_sig$jj[kk],df_sig$ii[kk])),
+      default.units="native",rot=90)
+  }
+}
+
+my_boxplot(group_name,list_data,pvalue_matrix)
+```
