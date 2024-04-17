@@ -709,3 +709,23 @@ my_boxplot<-function(group_name,list_data,pvalue_matrix){
 
 my_boxplot(group_name,list_data,pvalue_matrix)
 ```
+
+### axis
+```
+  # grid.xaxis()
+  at<-seq(-20,30,10)
+  label<-seq(-20,30,10)
+  major<-linesGrob(unit(c(min(at),max(at)),"native"),unit(c(1,1),"npc"))
+  ticks<-segmentsGrob(
+    unit(at,"native"),unit(1,"npc"),unit(at,"native"),unit(1,"npc")+unit(0.2,"lines"))
+  labels<-textGrob(label,unit(at,"native"),unit(1,"npc")+unit(0.5,"lines"),just="bottom",rot=0,gp=gpar(cex=0.75))
+  grid.draw(gList(major,ticks,labels))
+  # grid.yaxis()
+  at<-seq(-20,20,10)
+  label<-seq(-20,20,10)
+  major<-linesGrob(unit(c(0,0),"npc")+unit(0.5,"line"),unit(c(min(at),max(at)),"native"))
+  ticks<-segmentsGrob(
+    unit(0,"npc")+unit(0.5,"lines"),unit(at,"native"),unit(0,"npc")+unit(0.3,"lines"),unit(at,"native"))
+  labels<-textGrob(label,unit(0,"npc")+unit(0,"lines"),unit(at,"native"),just="right",rot=0,gp=gpar(cex=0.75))
+  grid.draw(gList(major,ticks,labels))
+```
