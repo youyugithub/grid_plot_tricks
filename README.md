@@ -729,3 +729,28 @@ my_boxplot(group_name,list_data,pvalue_matrix)
   labels<-textGrob(label,unit(0,"npc")+unit(0,"lines"),unit(at,"native"),just="right",rot=0,gp=gpar(cex=0.75))
   grid.draw(gList(major,ticks,labels))
 ```
+
+```
+grid.myxaxis<-function(at,label,tick_out=0.2,text_out=0.5){
+  major<-linesGrob(unit(c(min(at),max(at)),"native"),unit(c(0,0),"npc"))
+  ticks<-segmentsGrob(
+    unit(at,"native"),unit(0,"npc"),unit(at,"native"),unit(0,"npc")-unit(tick_out,"lines"))
+  labels<-textGrob(label,unit(at,"native"),unit(0,"npc")-unit(text_out,"lines"),just="top",rot=0)
+  grid.draw(gList(major,ticks,labels))
+}
+
+grid.myyaxis<-function(at,label,tick_out=0.2,text_out=0.5){
+  major<-linesGrob(unit(0,"npc"),unit(c(min(at),max(at)),"native"))
+  ticks<-segmentsGrob(
+    unit(0,"npc"),unit(at,"native"),unit(0,"npc")-unit(tick_out,"lines"),unit(at,"native"))
+  labels<-textGrob(label,unit(0,"npc")-unit(text_out,"lines"),unit(at,"native"),just="right",rot=0)
+  grid.draw(gList(major,ticks,labels))
+}
+
+grid.newpage()
+pushViewport(plotViewport())
+pushViewport(dataViewport(xData=c(0,5),yData=c(0,5)))
+
+grid.myxaxis(0:5,LETTERS[1:6])
+grid.myyaxis(0:5,LETTERS[1:6])
+```
