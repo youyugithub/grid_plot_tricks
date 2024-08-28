@@ -754,3 +754,92 @@ pushViewport(dataViewport(xData=c(0,5),yData=c(0,5)))
 grid.myxaxis(0:5,LETTERS[1:6])
 grid.myyaxis(0:5,LETTERS[1:6])
 ```
+
+
+# important legend examples
+```
+myborder<-unit(c(0.2,0.2,0.2,0.2),"lines")
+
+title<-"TITLE"
+a_table<-outer(1:5,LETTERS[1:5],paste0)
+header1<-c("A","B&C","B&C","D&E","D&E")
+header2<-LETTERS[1:5]
+footnote<-"*footnote"
+
+mylegend1<-frameGrob(layout=grid.layout(ncol=5))
+for(jj in 1:length(unique(header1))){
+  a_header<-unique(header1)[jj]
+  mylegend1<-packGrob(
+    mylegend1,
+    textGrob(a_header),
+    row=1,col=which(header1==a_header),border=myborder)
+}
+for(jj in 1:length(unique(header2))){
+  a_header<-unique(header2)[jj]
+  mylegend1<-packGrob(
+    mylegend1,
+    textGrob(a_header),
+    row=2,col=jj,border=myborder)
+}
+
+for(jj in 1:ncol(a_table)){
+  for(ii in 1:nrow(a_table)){
+    mylegend1<-packGrob(
+      mylegend1,
+      textGrob(a_table[ii,jj]),
+      row=ii+2,col=jj,border=myborder)
+  }
+}
+
+mylegend1<-packGrob(mylegend1,textGrob(title),side="top",border=unit(c(1,0,0,0),"lines"))
+mylegend1<-packGrob(mylegend1,textGrob(footnote),side="bottom",border=unit(c(0,0,1,0),"lines"))
+
+grid.draw(mylegend1)
+```
+
+```
+# place legend on bottomright
+dev.off()
+myborder<-unit(c(0.2,0.2,0.2,0.2),"lines")
+
+title<-"TITLE"
+a_table<-outer(1:5,LETTERS[1:5],paste0)
+header1<-c("A","B&C","B&C","D&E","D&E")
+header2<-LETTERS[1:5]
+footnote<-"*footnote"
+
+mylegend1<-frameGrob(layout=grid.layout(ncol=5))
+for(jj in 1:length(unique(header1))){
+  a_header<-unique(header1)[jj]
+  mylegend1<-packGrob(
+    mylegend1,
+    textGrob(a_header),
+    row=1,col=which(header1==a_header),border=myborder)
+}
+for(jj in 1:length(unique(header2))){
+  a_header<-unique(header2)[jj]
+  mylegend1<-packGrob(
+    mylegend1,
+    textGrob(a_header),
+    row=2,col=jj,border=myborder)
+}
+
+for(jj in 1:ncol(a_table)){
+  for(ii in 1:nrow(a_table)){
+    mylegend1<-packGrob(
+      mylegend1,
+      textGrob(a_table[ii,jj]),
+      row=ii+2,col=jj,border=myborder)
+  }
+}
+
+mylegend1<-packGrob(mylegend1,textGrob(title),side="top",border=unit(c(1,0,0,0),"lines"))
+mylegend1<-packGrob(mylegend1,textGrob(footnote),side="bottom",border=unit(c(0,0,1,0),"lines"))
+
+pushViewport(viewport(
+  x=1,y=0,
+  width=unit(1,"grobwidth",mylegend1)+unit(1,"lines"),
+  height=unit(1,"grobheight",mylegend1)+unit(1,"lines"),
+  just=c(1,0)))
+grid.draw(mylegend1)
+```
