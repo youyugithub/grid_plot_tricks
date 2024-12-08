@@ -843,3 +843,37 @@ pushViewport(viewport(
   just=c(1,0)))
 grid.draw(mylegend1)
 ```
+
+
+
+```
+grid_plot_a_table<-function(x,y,df,widths){
+  
+  pushViewport(
+    viewport(x=x,y=y,width=unit(1,"points"),height=unit(1,"points"),clip="off"))
+  
+  if(is.data.frame(df)){
+    a_table<-as.matrix(df)
+    a_table<-rbind(colnames(a_table),a_table)
+  }
+  
+  myborder<-unit(c(0,0,0,0),"lines")
+  mytable<-frameGrob()
+  
+  for(ii in 1:nrow(a_table)){
+    for(jj in 1:ncol(a_table)){
+      a_cell<-textGrob(a_table[ii,jj],gp=gpar(cex=0.8))
+      mytable<-packGrob(mytable,a_cell,row=ii,col=jj,border=myborder)
+    }
+  }
+  
+  mytable$framevp<-viewport(
+    layout=grid.layout(
+      nrow=nrow(a_table),
+      ncol=ncol(a_table),
+      widths=widths,
+      heights=unit(rep(0.9,nrow(a_table)),"lines")))
+  grid.draw(mytable)
+  popViewport()
+}
+```
