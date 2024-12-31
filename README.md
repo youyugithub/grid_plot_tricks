@@ -726,6 +726,115 @@ my_boxplot<-function(list_data,group_name,pvalue_matrix){
 ```
 
 ```
+# better + title
+my_boxplot<-function(list_data,group_name,pvalue_matrix,main=""){
+  library(grid)
+  library(tidyverse)
+  to_rectx<-function(x1,x2)c(x1,x2,x2,x1)
+  to_recty<-function(y1,y2)c(y1,y1,y2,y2)
+  
+  if(missing(group_name)){
+    group_name<-names(list_data)
+  }
+  if(missing(pvalue_matrix)){
+    x<-unlist(list_data)
+    g<-rep(names(list_data),lengths(list_data))
+    pvalue_matrix<-matrix(NA,length(list_data),length(list_data))
+    colnames(pvalue_matrix)<-names(list_data)
+    rownames(pvalue_matrix)<-names(list_data)
+    result<-TukeyHSD(aov(lm(x~g)),ordered=TRUE)$g
+    comparisons<-str_split(rownames(result),"-")
+    pvalues<-result[,"p adj"]
+    for(ii in 1:length(comparisons)){
+      pvalue_matrix[comparisons[[ii]][1],comparisons[[ii]][2]]<-pvalues[ii]
+      pvalue_matrix[comparisons[[ii]][2],comparisons[[ii]][1]]<-pvalues[ii]
+    }
+  }
+  
+  df_sig_raw<-data.frame()
+  for(ii in 1:length(group_name)){
+    for(jj in 1:length(group_name)){
+      if(ii>=jj)next
+      df_sig_raw<-rbind(df_sig_raw,data.frame(ii=ii,jj=jj,pvalue=pvalue_matrix[ii,jj]))
+    }
+  }
+  df_sig<-df_sig_raw%>%
+    filter(pvalue<0.05)%>%
+    mutate(
+      star=case_when(
+        pvalue<0.001~"***",
+        pvalue<0.01~"**",
+        pvalue<0.05~"*"),
+      pformatted=case_when(
+        pvalue<0.001~"p<.001",
+        TRUE~paste0("p=",sprintf("%.3f",pvalue))))%>%
+    arrange(abs(ii-jj))
+  
+  left_margin<-unit(0,"line")
+  for(ii in 1:1:length(group_name)){
+    left_margin<-max(left_margin,convertX(unit(1,"grobwidth",textGrob(group_name[ii])),"line"))
+  }
+  
+  pushViewport(plotViewport(margins=c(4,1.5+as.numeric(left_margin),0,2)+0.1))
+  grid.rect()
+  pushViewport(viewport(layout=grid.layout(
+    nrow=1,ncol=2,widths=unit(c(1,nrow(df_sig)*2),c("null","line")))))
+  pushViewport(dataViewport(
+    yData=c(0.5,length(group_name)+0.5),
+    xData=unlist(list_data),
+    layout.pos.row=1,layout.pos.col=1))
+  for(ii in 1:length(group_name)){
+    a_boxplot<-boxplot(list_data[[ii]],plot=F)
+    grid.lines(
+      x=c(a_boxplot$stats[1],a_boxplot$stats[5]),
+      y=c(ii,ii),default.units="native",gp=gpar(lwd=1.5))
+    grid.polygon(
+      x=to_rectx(a_boxplot$stats[2],a_boxplot$stats[4]),
+      y=to_recty(ii-0.35,ii+0.35),default.units="native",gp=gpar(lwd=1.5,fill="white"))
+    grid.lines(
+      x=c(a_boxplot$stats[3],a_boxplot$stats[3]),
+      y=c(ii-0.35,ii+0.35),default.units="native",gp=gpar(lwd=1.5,fill="white"))
+    grid.lines(
+      x=c(a_boxplot$stats[1],a_boxplot$stats[1]),
+      y=c(ii-0.2,ii+0.2),default.units="native",gp=gpar(lwd=1.5))
+    grid.lines(
+      x=c(a_boxplot$stats[5],a_boxplot$stats[5]),
+      y=c(ii-0.2,ii+0.2),default.units="native",gp=gpar(lwd=1.5))
+    nout<-length(a_boxplot$out)
+    if(nout>=1)grid.points(
+      x=a_boxplot$out,
+      y=rep(ii,nout),
+      default.units="native",pch=16,size=unit(5,"points"))
+    grid.text(group_name[ii],x=unit(0,"npc")-unit(1,"line"),y=unit(ii,"native"),just="right")
+  }
+  grid.xaxis()
+  grid.yaxis(at=1:length(group_name),label=F)
+  grid.text(main,x=unit(0.5,"npc"),y=unit(0,"npc")-unit(3,"line"))
+  popViewport()
+  pushViewport(dataViewport(
+    yData=c(0.5,length(group_name)+0.5),
+    xData=c(0,nrow(df_sig)+0.1),
+    layout.pos.row=1,layout.pos.col=2))
+  if(nrow(df_sig)>0){
+    for(kk in 1:nrow(df_sig)){
+      grid.lines(
+        x=c(kk-1,kk-0.75,kk-0.75,kk-1),
+        y=c(df_sig$ii[kk],df_sig$ii[kk],df_sig$jj[kk],df_sig$jj[kk]),
+        default.units="native")
+      grid.text(
+        df_sig$pformatted[kk],
+        x=unit(kk-0.75,"native")+unit(0.6,"line"),
+        y=unit(mean(c(df_sig$jj[kk],df_sig$ii[kk])),"native"),
+        rot=270)
+    }
+  }
+  popViewport()
+  popViewport()
+  popViewport()
+}
+```
+
+```
 set.seed(3)
 group_name<-c("Group1","Group22","Group333","Group4444","Group55555")
 list_data<-list(
