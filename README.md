@@ -1095,3 +1095,17 @@ grid_plot_a_table<-function(x,y,df,widths){
   popViewport()
 }
 ```
+
+## adjust xaxis placement
+```
+grid.newpage()
+pushViewport(plotViewport())
+suppressWarnings(grid.xaxis(
+  edits=gEditList(
+    gEdit(gPath="ticks",y1=unit(-0.25,"line")),
+    gEdit(gPath="labels",y=unit(-1,"line")))))
+suppressWarnings(grid.yaxis(
+  edits=gEditList(
+    gEdit(gPath="ticks",x1=unit(-0.25,"line")),
+    gEdit(gPath="labels",x=unit(-0.5,"line")))))
+```
