@@ -1109,3 +1109,8 @@ suppressWarnings(grid.yaxis(
     gEdit(gPath="ticks",x1=unit(-0.25,"line")),
     gEdit(gPath="labels",x=unit(-0.5,"line")))))
 ```
+
+## expression/formula in plot
+```
+substitute(paste("Percent rs1111111-A ",italic("(GENE)")," present"))
+```
