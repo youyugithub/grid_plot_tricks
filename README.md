@@ -1114,3 +1114,64 @@ suppressWarnings(grid.yaxis(
 ```
 substitute(paste("Percent rs1111111-A ",italic("(GENE)")," present"))
 ```
+
+## diagram
+
+```
+library(grid)
+
+textBox <- function(label, x=.5, y=.5) {
+  tablevp <-
+    viewport(x=x, y=y,
+             width=stringWidth(label)+unit(1,"lines"),
+             height=unit(2.5,"lines"))
+  pushViewport(tablevp)
+  grid.rect(gp=gpar(lwd=1.5))
+  grid.text(label,gp=gpar(lineheight=1.0))
+  popViewport()
+}
+boxGrob <- function(label, x=.5, y=.5) {
+  grob(label=label, x=x, y=y, cl="box")
+}
+drawDetails.box <- function(x, ...) {
+  textBox(x$label, x$x, x$y)
+}
+xDetails.box <- function(x, theta) {
+  nlines <- length(x$label)
+  height <- unit(2, "lines")
+  width <- unit(1, "lines") + stringWidth(x$label)
+  grobX(rectGrob(x=x$x, y=x$y, width=width, height=height),
+        theta)
+}
+yDetails.box <- function(x, theta) {
+  nlines <- length(x$label)
+  height <- unit(2, "lines")
+  width <- unit(1, "lines") + stringWidth(x$label)
+  grobY(rectGrob(x=x$x, y=x$y, width=width, height=height),
+        theta)
+}
+
+myarrow<-arrow(type="closed",angle=15,length=unit(0.6,"lines"))
+
+
+xbox<-c(0.025,0.85)
+ybox<-c(0.05,0.95)
+grid.rect(
+  x=mean(xbox),y=mean(ybox),
+  width=diff(xbox),height=diff(ybox))
+state1<-boxGrob(label="1. ",x=0.1,y=0.5)
+state2<-boxGrob(label="2. ",x=0.3,y=0.8)
+state3<-boxGrob(label="3. ",x=0.3,y=0.5)
+state4<-boxGrob(label="4. ",x=0.3,y=0.2)
+
+grid.draw(state1)
+grid.draw(state2)
+grid.draw(state3)
+grid.draw(state4)
+
+grid.xspline(
+  unit.c(grobX(state1,"east"),grobX(state2,"west")),
+  unit.c(grobY(state1,"east"),grobY(state2,"west")),
+  arrow=myarrow,
+  gp=gpar(fill="black",lwd=1.5))
+```
