@@ -1175,3 +1175,213 @@ grid.xspline(
   arrow=myarrow,
   gp=gpar(fill="black",lwd=1.5))
 ```
+
+## diagram layout
+```
+my_grid_layout<-function(
+    heights=1,
+    widths=1,
+    gap_heights=0,
+    gap_widths=0,
+    scale=T,
+    bottom_to_top=F,
+    left_to_right=T){
+  
+  interlock <- function(x, y) {
+    n <- min(length(x), length(y))
+    combined <- c(rbind(x[1:n], y[1:n]))
+    if (length(x) > n) {
+      combined <- c(combined, x[(n + 1):length(x)])
+    } else if (length(y) > n) {
+      combined <- c(combined, y[(n + 1):length(y)])
+    }
+    return(combined)
+  }
+  
+  layout_nrow<-length(heights)
+  layout_ncol<-length(widths)
+  if(length(gap_widths)==1)gap_widths<-rep(gap_widths,layout_ncol+1)
+  if(length(gap_heights)==1)gap_heights<-rep(gap_heights,layout_nrow+1)
+  all_widths<-interlock(gap_widths,widths)
+  all_heights<-interlock(gap_heights,heights)
+  if(bottom_to_top)all_heights<-rev(all_heights)
+  if(!left_to_right)all_widths<-rev(all_widths)
+  all_x<-cumsum(all_widths)
+  all_y<-cumsum(all_heights)
+  if(scale==T){
+    all_x<-all_x/max(all_x)
+    all_y<-all_y/max(all_y)
+  }
+  gridleft<-all_x[seq(1,layout_ncol*2-1,2)]
+  gridright<-all_x[seq(2,layout_ncol*2,2)]
+  gridbottom<-all_y[seq(1,layout_nrow*2-1,2)]
+  gridtop<-all_y[seq(2,layout_nrow*2,2)]
+
+  output<-matrix(vector("list",layout_nrow*layout_ncol),nrow=layout_nrow,ncol=layout_ncol)
+  for(ii in 1:layout_nrow){
+    for(jj in 1:layout_ncol){
+      output[[ii,jj]]<-list(
+        xmin=gridleft[jj],
+        xmax=gridright[jj],
+        ymin=gridbottom[ii],
+        ymax=gridtop[ii],
+        x=(gridleft[jj]+gridright[jj])/2,
+        y=(gridbottom[ii]+gridtop[ii])/2,
+        width=gridright[jj]-gridleft[jj],
+        height=gridtop[ii]-gridbottom[ii])
+    }
+  }
+  return(output)
+}
+
+
+gd<-my_grid_layout(
+  heights=rep(1,3),
+  widths=rep(1,6),
+  gap_heights=0.1,
+  gap_widths=0.1)
+
+grid.newpage()
+for(ii in 1:nrow(a_layout)){
+  for(jj in 1:ncol(a_layout)){
+    grid.rect(x=gd[[ii,jj]]$x,y=gd[[ii,jj]]$y,width=gd[[ii,jj]]$width,height=gd[[ii,jj]]$height)
+  }
+}
+```
+
+## grid autoencoder neural network
+```
+library(grid)
+library(xdvir)
+library(latex2exp)
+source("save_as_multiple_formats.R")
+
+textBox <- function(label, x=.5, y=.5) {
+  tablevp <-
+    viewport(x=x, y=y,
+             width=unit(1.2,"lines"),
+             height=unit(1.2,"lines"))
+  pushViewport(tablevp)
+  if(label=="sum"){
+    grid.circle(gp=gpar(lwd=1.5))
+    grid.text(TeX("$\\sum$"))
+  }else if(label=="risk"){
+    grid.circle(gp=gpar(lwd=1.5))
+    grid.text("r")
+  }else if(label=="activation"){
+    grid.rect(gp=gpar(lwd=1.5))
+    grid.lines(
+      x=c(0.1,0.2,0.4,0.5,0.6,0.8,0.9),y=c(0.2,0.2,0.3,0.5,0.7,0.8,0.8),
+      gp=gpar(lwd=1.5),
+      default.units="npc")
+  }else{
+    grid.circle(gp=gpar(lwd=1.5,fill=NA))
+    grid.text(label,gp=gpar(lineheight=1.0))
+  }
+  popViewport()
+}
+boxGrob <- function(label, x=.5, y=.5) {
+  grob(label=label, x=x, y=y, cl="box")
+}
+drawDetails.box <- function(x, ...) {
+  textBox(x$label, x$x, x$y)
+}
+xDetails.box <- function(x, theta) {
+  nlines <- length(x$label)
+  height <- unit(1.2, "lines")
+  width <- unit(1.2, "lines")
+  grobX(rectGrob(x=x$x, y=x$y, width=width, height=height),
+        theta)
+}
+yDetails.box <- function(x, theta) {
+  nlines <- length(x$label)
+  height <- unit(1.2, "lines")
+  width <- unit(1.2, "lines")
+  grobY(rectGrob(x=x$x, y=x$y, width=width, height=height),
+        theta)
+}
+
+myarrow<-arrow(type="closed",angle=15,length=unit(0.6,"lines"))
+
+connect_two<-function(from,to){
+  grid.xspline(
+    unit.c(grobX(get(from),"east"),grobX(get(to),"west")),
+    unit.c(grobY(get(from),"east"),grobY(get(to),"west")),
+    gp=gpar(fill="black",lwd=1.5))
+}
+# pdf(file,width=8,height=3)
+# pushViewport(viewport(gp=gpar(cex=0.5)))
+
+################
+# simulation 2 #
+################
+
+# pdf("output/teddy_diagram.pdf",width=8,height=3)
+
+
+node_names<-
+  list(
+    paste0("x1",1:5),
+    paste0("x2",1:4),
+    paste0("x3",1:3),
+    paste0("x4",1:4),
+    paste0("x5",1:5))
+node_x<-
+  list(
+    rep(1/6,5),
+    rep(2/6,4),
+    rep(3/6,3),
+    rep(4/6,4),
+    rep(5/6,5))
+node_y<-
+  list(
+    c(1,3,5,7,9)/10,
+    c(2,4,6,8)/10,
+    c(3,5,7)/10,
+    c(2,4,6,8)/10,
+    c(1,3,5,7,9)/10)
+
+
+a_plot%<a-%{
+  grid.newpage()
+
+  pushViewport(viewport(layout=grid.layout(nrow=2,height=unit(c(3,1),c("line","null")))))
+  pushViewport(viewport(layout.pos.row=1))
+  popViewport()
+  
+  pushViewport(viewport(layout.pos.row=2))
+  for(layer in 1:length(node_names)){
+    for(idx in 1:length(node_names[[layer]])){
+      node_name<-node_names[[layer]][idx]
+      assign(node_name,boxGrob(
+        label="",
+        x=node_x[[layer]][idx],
+        y=node_y[[layer]][idx]))
+      grid.draw(get(node_name))
+    }
+  }
+  
+  for(ii in 1:length(node_names[[1]])){
+    for(jj in 1:length(node_names[[2]])){
+      connect_two(node_names[[1]][ii],node_names[[2]][jj])
+    }
+  }
+  for(ii in 1:length(node_names[[2]])){
+    for(jj in 1:length(node_names[[3]])){
+      connect_two(node_names[[2]][ii],node_names[[3]][jj])
+    }
+  }
+  for(ii in 1:length(node_names[[3]])){
+    for(jj in 1:length(node_names[[4]])){
+      connect_two(node_names[[3]][ii],node_names[[4]][jj])
+    }
+  }
+  for(ii in 1:length(node_names[[4]])){
+    for(jj in 1:length(node_names[[5]])){
+      connect_two(node_names[[4]][ii],node_names[[5]][jj])
+    }
+  }
+  popViewport()
+}
+
+```
