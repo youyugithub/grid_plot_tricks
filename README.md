@@ -1309,15 +1309,6 @@ connect_two<-function(from,to){
     unit.c(grobY(get(from),"east"),grobY(get(to),"west")),
     gp=gpar(fill="black",lwd=1.5))
 }
-# pdf(file,width=8,height=3)
-# pushViewport(viewport(gp=gpar(cex=0.5)))
-
-################
-# simulation 2 #
-################
-
-# pdf("output/teddy_diagram.pdf",width=8,height=3)
-
 
 node_names<-
   list(
