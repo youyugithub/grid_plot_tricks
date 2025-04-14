@@ -1217,10 +1217,10 @@ my_grid_layout<-function(
   gridbottom<-all_y[seq(1,layout_nrow*2-1,2)]
   gridtop<-all_y[seq(2,layout_nrow*2,2)]
 
-  output<-matrix(vector("list",layout_nrow*layout_ncol),nrow=layout_nrow,ncol=layout_ncol)
+  gd<-matrix(vector("list",layout_nrow*layout_ncol),nrow=layout_nrow,ncol=layout_ncol)
   for(ii in 1:layout_nrow){
     for(jj in 1:layout_ncol){
-      output[[ii,jj]]<-list(
+      gd[[ii,jj]]<-list(
         xmin=gridleft[jj],
         xmax=gridright[jj],
         ymin=gridbottom[ii],
@@ -1231,7 +1231,14 @@ my_grid_layout<-function(
         height=gridtop[ii]-gridbottom[ii])
     }
   }
-  return(output)
+  return(list(
+    gd=gd,
+    gridleft=gridleft,
+    gridright=gridright,
+    gridbottom=gridbottom,
+    gridtop=gridtop,
+    all_x=all_x,
+    all_y=all_y))
 }
 
 
@@ -1244,7 +1251,7 @@ gd<-my_grid_layout(
 grid.newpage()
 for(ii in 1:nrow(a_layout)){
   for(jj in 1:ncol(a_layout)){
-    grid.rect(x=gd[[ii,jj]]$x,y=gd[[ii,jj]]$y,width=gd[[ii,jj]]$width,height=gd[[ii,jj]]$height)
+    grid.rect(x=gd$gd[[ii,jj]]$x,y=gd$gd[[ii,jj]]$y,width=gd$gd[[ii,jj]]$width,height=gd$gd[[ii,jj]]$height)
   }
 }
 ```
