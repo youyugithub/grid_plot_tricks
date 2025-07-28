@@ -463,6 +463,107 @@ dostep<-function(x,y){
   return(result)
 }
 ```
+#### grid.plot.surv
+```
+library(survival)
+
+get_step_coords <- function(sfit, trunc = NULL) {
+  # Extract time and survival estimates
+  time <- c(0, sfit$time)           # Start at time=0
+  surv <- c(1, sfit$surv)            # Start at surv=1
+  upper <- c(1, sfit$upper)          # Upper CI (if exists)
+  lower <- c(1, sfit$lower)          # Lower CI (if exists)
+  
+  # Check if CIs exist (if not, set to surv)
+  if (is.null(sfit$upper)) upper <- surv
+  if (is.null(sfit$lower)) lower <- surv
+  
+  # Function to create step coordinates for any curve (surv/upper/lower)
+  make_steps <- function(t, y) {
+    n <- length(t)
+    step_t <- rep(t, each = 2)[-1]       # Skip first (0,1)
+    step_y <- rep(y, each = 2)[-2 * n]   # Skip last
+    list(t = step_t, y = step_y)
+  }
+  
+  # Generate steps for survival and CIs
+  surv_steps <- make_steps(time, surv)
+  upper_steps <- make_steps(time, upper)
+  lower_steps <- make_steps(time, lower)
+  
+  # Apply truncation if requested
+  if (!is.null(trunc)) {
+    truncate_steps <- function(steps) {
+      idx <- steps$t <= trunc
+      steps$t <- steps$t[idx]
+      steps$y <- steps$y[idx]
+      
+      # Add interpolated point if truncation cuts a step
+      if (length(steps$t) > 0 && max(steps$t) < trunc) {
+        steps$t <- c(steps$t, trunc)
+        steps$y <- c(steps$y, tail(steps$y, 1))
+      }
+      steps
+    }
+    
+    surv_steps <- truncate_steps(surv_steps)
+    upper_steps <- truncate_steps(upper_steps)
+    lower_steps <- truncate_steps(lower_steps)
+  }
+  
+  # Return all curves
+  list(
+    time = surv_steps$t,
+    surv = surv_steps$y,
+    upper = upper_steps$y,
+    lower = lower_steps$y
+  )
+}
+grid.plot.surv<-function(
+    a_survfit,
+    xlim=NULL,ylim=NULL,
+    xat=NULL,xlabel=TRUE,
+    yat=NULL,ylabel=TRUE){
+  # Set default xlim and ylim if NULL
+  if(is.null(xlim))xlim<-c(0,max(a_survfit$time,na.rm=TRUE))
+  if(is.null(ylim))ylim<-c(0,1)
+  
+  # Create the main viewport with data scaling
+  pushViewport(dataViewport(xData=xlim,yData=ylim))
+  pushViewport(viewport(layout=grid.layout(nrow=2,heights=unit(c(1,1.5),c("null","line")))))
+  
+  pushViewport(dataViewport(xData=xlim,yData=ylim,layout.pos.row=1))
+  grid.rect()
+  list_step<-get_step_coords(a_survfit,trunc=max(xlim,na.rm=T))
+  grid.lines(list_step$time,list_step$surv,default.units="native")
+  grid.lines(list_step$time,list_step$upper,default.units="native",gp=gpar(lty=2))
+  grid.lines(list_step$time,list_step$lower,default.units="native",gp=gpar(lty=2))
+  suppressWarnings(grid.yaxis(at=yat,label=ylabel,edits=gEditList(
+    gEdit(gPath="ticks",x1=unit(-0.25,"line")),
+    gEdit(gPath="labels",x=unit(-0.5,"line")))))
+  grid.text(label="Survival",x=unit(0,"npc")-unit(3,"line"),rot=90)
+  popViewport()
+  
+  pushViewport(dataViewport(xData=xlim,yData=ylim,layout.pos.row=2))
+  grid.rect()
+  suppressWarnings(grid.xaxis(at=xat,label=xlabel,edits=gEditList(
+    gEdit(gPath="ticks",y1=unit(-0.25,"line")),
+    gEdit(gPath="labels",y=unit(-1,"line")))))
+  textat<-grDevices::axisTicks(xlim,log=F)
+  a_summary<-summary(a_survfit,times=textat,extend=T)
+  grid.text(label=a_summary$n.risk,x=unit(textat,"native"))
+  grid.text(label="N at risk",x=unit(0,"npc")-unit(0.3,"line"),just="right")
+  grid.text(label="Time",y=unit(0,"npc")-unit(2.5,"line"))
+  popViewport()
+  popViewport(2)
+}
+
+grid.newpage()
+pushViewport(plotViewport())
+grid.rect()
+grid.plot.surv(a_survfit,xlim=c(0,60))
+```
+
 ## center a text box
 ```
 grid.newpage()
