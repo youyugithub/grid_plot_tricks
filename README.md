@@ -1483,3 +1483,48 @@ pushViewport(plotViewport())
 grid.rect()
 grid.plot.surv(a_survfit,xlim=c(0,60))
 ```
+
+## text multiple lines
+```
+library(grid)
+
+grid_text_multiline_c<- function(mylines) {
+  grob_list <- lapply(seq_along(mylines), function(i) {
+    textGrob(mylines[[i]],vp=viewport(layout.pos.row=i, layout.pos.col=1,gp=gpar(lineheight=1)))
+  })
+  nlines<-stringr::str_count(mylines,"\n")+1
+  layout_vp <- viewport(layout=grid.layout(
+    nrow=length(mylines), ncol=1, 
+    heights=unit(nlines,"line")))
+  grid.draw(gTree(children=do.call(gList, grob_list), vp=layout_vp))
+}
+
+grid_text_multiline_l<- function(mylines) {
+  grob_list<-lapply(seq_along(mylines),function(i){
+    textGrob(mylines[[i]],just="left",x=0,vp=viewport(
+      layout.pos.row=i,layout.pos.col=1,gp=gpar(lineheight=1)))
+  })
+  nlines<-stringr::str_count(mylines,"\n")+1
+  layout_vp<-viewport(layout=grid.layout(
+    nrow=length(mylines),ncol=1,
+    widths=do.call(unit.pmax,lapply(grob_list,function(x)unit(1,"grobwidth",x))),
+    heights=unit(nlines,"line")))
+  grid.draw(gTree(children=do.call(gList, grob_list),vp=layout_vp))
+}
+
+grid_text_multiline_r<- function(mylines) {
+  grob_list<-lapply(seq_along(mylines),function(i){
+    textGrob(mylines[[i]],just="right",x=1,vp=viewport(
+      layout.pos.row=i,layout.pos.col=1,gp=gpar(lineheight=1)))
+  })
+  nlines<-stringr::str_count(mylines,"\n")+1
+  layout_vp<-viewport(layout=grid.layout(
+    nrow=length(mylines),ncol=1,
+    widths=do.call(unit.pmax,lapply(grob_list,function(x)unit(1,"grobwidth",x))),
+    heights=unit(nlines,"line")))
+  grid.draw(gTree(children=do.call(gList, grob_list),vp=layout_vp))
+}
+grid.newpage()
+grid_text_multiline_r(c("AAA","BBBBBBBBBBBBB","CCCCC"))
+
+```
