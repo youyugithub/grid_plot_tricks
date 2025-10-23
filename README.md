@@ -1528,3 +1528,164 @@ grid.newpage()
 grid_text_multiline_r(c("AAA","BBBBBBBBBBBBB","CCCCC"))
 
 ```
+
+##
+```
+
+grid.plot.surv<-function(
+    a_survfit,
+    xlim=NULL,ylim=NULL,
+    xat=NULL,xlabel="Time",
+    yat=NULL,ylabel="Survival",
+    main=""){
+  # Set default xlim and ylim if NULL
+  if(is.null(xlim))xlim<-c(0,max(a_survfit$time,na.rm=TRUE))
+  if(is.null(ylim))ylim<-c(0,1)
+  
+  list_alltimepoints<-summary(a_survfit,extend=TRUE)%>%surv_summary_to_list()
+  selectedtimepoints<-pretty(xlim)
+  selectedtimepoints<-selectedtimepoints[selectedtimepoints>=min(xlim)&selectedtimepoints<=max(xlim)]
+  list_selectedtimepoints<-summary(a_survfit,extend=TRUE,times=selectedtimepoints)%>%surv_summary_to_list()
+  
+  n_curve<-length(list_alltimepoints)
+  
+  grid.newpage()
+  pushViewport(plotViewport(margins=c(4.1,4.1,3.1,1.1)))
+  # Create the main viewport with data scaling
+  pushViewport(dataViewport(xData=xlim,yData=ylim))
+  pushViewport(viewport(layout=grid.layout(nrow=n_curve+1,heights=unit(c(1,rep(1.5,n_curve)),c("null",rep("line",n_curve))))))
+  
+  pushViewport(dataViewport(xData=xlim,yData=ylim,layout.pos.row=1))
+  pushViewport(dataViewport(xData=xlim,yData=ylim,clip=T))
+  grid.rect()
+  for(i in 1:length(list_alltimepoints)){
+    temp_steps<-make_steps(list_alltimepoints[[i]]$time,list_alltimepoints[[i]]$surv)
+    grid.lines(temp_steps$t,temp_steps$y,default.units="native")
+    grid.points(
+      list_selectedtimepoints[[i]]$time,
+      list_selectedtimepoints[[i]]$surv,pch=16,size=unit(0.2,"char"))
+    grid.text(
+      sprintf("%.2f",list_selectedtimepoints[[i]]$surv[-1]),
+      list_selectedtimepoints[[i]]$time[-1],
+      list_selectedtimepoints[[i]]$surv[-1],default.units="native",
+      gp=gpar(cex=0.5),just="top")
+  }
+  popViewport()
+  grid.text(label=ylabel,x=unit(0,"npc")-unit(3,"line"),rot=90)
+  suppressWarnings(grid.yaxis(
+    edits=gEditList(
+      gEdit(gPath="ticks",x1=unit(-0.25,"line")),
+      gEdit(gPath="labels",x=unit(-0.5,"line")))))
+  popViewport()
+  for(i in 1:length(list_alltimepoints)){
+    pushViewport(dataViewport(xData=xlim,yData=c(0,1),layout.pos.row=i+1))
+    grid.rect()
+    grid.text(
+      list_selectedtimepoints[[i]]$n.risk,
+      x=unit(list_selectedtimepoints[[i]]$time,"native"),
+      gp=gpar(cex=0.8))
+    if(i==length(list_alltimepoints)){
+      suppressWarnings(grid.xaxis(
+        edits=gEditList(
+          gEdit(gPath="ticks",y1=unit(-0.25,"line")),
+          gEdit(gPath="labels",y=unit(-1,"line")))))
+    }
+    popViewport()
+  }
+  grid.text(label=xlabel,y=unit(0,"npc")-unit(2.5,"line"))
+  grid.text(label=main,y=unit(1,"npc")+unit(1.5,"line"),gp=gpar(fontface="bold"))
+}
+
+
+grid.plot.surv.list<-function(
+    list_survfit,
+    xlim=NULL,ylim=NULL,
+    xat=NULL,xlabel="Time",
+    yat=NULL,ylabel="Survival",
+    main="",
+    col="black"){
+  # Set default xlim and ylim if NULL
+  if(is.null(xlim))xlim<-c(0,max(sapply(list_survfit,function(x)max(x$time,na.rm=T)),na.rm=T))
+  if(is.null(ylim))ylim<-c(0,1)
+  
+  list_alltimepoints<-lapply(
+    list_survfit,
+    function(x)summary(x,extend=T)[
+      c("time", "n.risk", "n.event", "n.censor", "surv", "std.err", "cumhaz", "std.chaz", "lower", "upper")]%>%as.data.frame())
+  selectedtimepoints<-pretty(xlim);selectedtimepoints<-selectedtimepoints[selectedtimepoints>=min(xlim)&selectedtimepoints<=max(xlim)]
+  list_selectedtimepoints<-lapply(
+    list_survfit,
+    function(x)summary(x,extend=T,times=selectedtimepoints)[
+      c("time", "n.risk", "n.event", "n.censor", "surv", "std.err", "cumhaz", "std.chaz", "lower", "upper")]%>%as.data.frame())
+  
+  n_curve<-length(list_alltimepoints)
+  col<-rep(col,length.out=n_curve)
+  
+  grid.newpage()
+  pushViewport(plotViewport(margins=c(4.1,4.1,3.1,1.1)))
+  # Create the main viewport with data scaling
+  pushViewport(dataViewport(xData=xlim,yData=ylim))
+  pushViewport(viewport(layout=grid.layout(nrow=n_curve+1,heights=unit(c(1,rep(1.5,n_curve)),c("null",rep("line",n_curve))))))
+  
+  pushViewport(dataViewport(xData=xlim,yData=ylim,layout.pos.row=1))
+  pushViewport(dataViewport(xData=xlim,yData=ylim,clip=T))
+  grid.rect()
+  for(i in 1:length(list_alltimepoints)){
+    temp_steps<-make_steps(list_alltimepoints[[i]]$time,list_alltimepoints[[i]]$surv)
+    grid.lines(temp_steps$t,temp_steps$y,default.units="native",gp=gpar(col=col[i]))
+    grid.points(
+      list_selectedtimepoints[[i]]$time,
+      list_selectedtimepoints[[i]]$surv,pch=16,size=unit(0.2,"char"))
+    grid.text(
+      sprintf("%.2f",list_selectedtimepoints[[i]]$surv[-1]),
+      x=unit(list_selectedtimepoints[[i]]$time[-1],"native"),
+      y=unit(list_selectedtimepoints[[i]]$surv[-1],"native")-unit(0.1,"line"),
+      gp=gpar(cex=0.75),just="top")
+  }
+  
+  myborder<-unit(c(0.2,0.5,0.2,0.5),"lines")
+  strings<-paste0(LETTERS[1:n_curve],". ",names(list_survfit))
+  mylegend1<-frameGrob()
+  symbolvp<-viewport(width=unit(1,"lines"))
+  for(i in 1:n_curve){
+    mylegend1<-packGrob(mylegend1,linesGrob(x=c(0,1),y=c(0.5,0.5),vp=symbolvp,gp=gpar(col=col[i],lwd=1.5)),row=i,col=1,border=myborder)
+    mylegend1<-packGrob(mylegend1,textGrob(strings[i],x=0,just="left",gp=gpar(col=col[i])),row=i,col=2,border=myborder)
+  }
+  pushViewport(viewport(
+    x=0,y=0,
+    width=unit(1,"grobwidth",mylegend1)+unit(1,"lines"),
+    height=unit(1,"grobheight",mylegend1)+unit(1,"lines"),
+    just=c(0,0)))
+  grid.draw(mylegend1)
+  popViewport()
+  
+  popViewport()
+  
+  grid.text(label=ylabel,x=unit(0,"npc")-unit(3,"line"),rot=90)
+  suppressWarnings(grid.yaxis(
+    edits=gEditList(
+      gEdit(gPath="ticks",x1=unit(-0.25,"line")),
+      gEdit(gPath="labels",x=unit(-0.5,"line")))))
+  popViewport()
+  for(i in 1:length(list_alltimepoints)){
+    pushViewport(dataViewport(xData=xlim,yData=c(0,1),layout.pos.row=i+1))
+    grid.rect()
+    grid.text(
+      list_selectedtimepoints[[i]]$n.risk,
+      x=unit(list_selectedtimepoints[[i]]$time,"native"),
+      gp=gpar(cex=0.8))
+    grid.text(LETTERS[i],x=unit(0,"npc")-unit(1,"line"),gp=gpar(col=col[i]))
+    popViewport()
+  }
+  pushViewport(dataViewport(xData=xlim,yData=c(0,1),layout.pos.row=2:(1+n_curve)))
+  grid.text(label="At risk",x=unit(0,"npc")-unit(3,"line"),rot=90)
+  suppressWarnings(grid.xaxis(
+    edits=gEditList(
+      gEdit(gPath="ticks",y1=unit(-0.25,"line")),
+      gEdit(gPath="labels",y=unit(-1,"line")))))
+  popViewport()
+  grid.text(label=xlabel,y=unit(0,"npc")-unit(2.5,"line"))
+  grid.text(label=main,y=unit(1,"npc")+unit(1.5,"line"),gp=gpar(fontface="bold"))
+}
+
+```
