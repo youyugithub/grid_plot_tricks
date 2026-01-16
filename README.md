@@ -1532,6 +1532,21 @@ grid_text_multiline_r(c("AAA","BBBBBBBBBBBBB","CCCCC"))
 ##
 ```
 
+surv_summary_to_list<-function(x){
+  df<-x[c("time", "n.risk", "n.event", "n.censor", "surv", "std.err", "cumhaz", "std.chaz", "strata", "lower", "upper")]%>%as.data.frame()
+  list_df<-df%>%group_by(strata)%>%group_split()
+  names(list_df)<-df%>%distinct(strata)%>%pull()
+  return(list_df)
+}
+
+surv_summary_to_list<-function(x){
+  df<-x[c("time", "n.risk", "n.event", "n.censor", "surv", "std.err", "cumhaz", "std.chaz", "strata", "lower", "upper")]%>%as.data.frame()
+  list_df<-df%>%group_by(strata)%>%group_split()
+  # names(list_df)<-df%>%distinct(strata)%>%pull()
+  return(list_df)
+}
+
+
 grid.plot.surv<-function(
     a_survfit,
     xlim=NULL,ylim=NULL,
