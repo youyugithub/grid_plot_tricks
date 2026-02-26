@@ -1729,12 +1729,38 @@ grid.plot.surv.list<-function(
     return(list_df)
   }
   
-  make_steps <- function(t, y) {
+  make_steps <- function(t, y, end=max(t)) {
+    
+    # Add origin
     t <- c(0, t)
     y <- c(1, y)
+    
+    # ---- Truncate if needed ----
+    if (end < max(t)) {
+      
+      # Keep times up to end
+      keep <- t <= end
+      t <- t[keep]
+      y <- y[keep]
+      
+      # Add end if not already present
+      if (tail(t, 1) < end) {
+        t <- c(t, end)
+        y <- c(y, tail(y, 1))  # carry forward survival
+      }
+      
+    } else if (end > max(t)) {
+      
+      # Extend flat to end
+      t <- c(t, end)
+      y <- c(y, tail(y, 1))
+    }
+    
+    # ---- Create step representation ----
     n <- length(t)
-    step_t <- rep(t, each = 2)[-1]       # Skip first (0,1)
-    step_y <- rep(y, each = 2)[-2 * n]   # Skip last
+    step_t <- rep(t, each = 2)[-1]
+    step_y <- rep(y, each = 2)[-2 * n]
+    
     list(t = step_t, y = step_y)
   }
   
@@ -1766,7 +1792,7 @@ grid.plot.surv.list<-function(
   pushViewport(dataViewport(xData=xlim,yData=ylim,clip=T))
   grid.rect()
   for(i in 1:length(list_alltimepoints)){
-    temp_steps<-make_steps(list_alltimepoints[[i]]$time,list_alltimepoints[[i]]$surv)
+    temp_steps<-make_steps(list_alltimepoints[[i]]$time,list_alltimepoints[[i]]$surv,xlim[2])
     grid.lines(temp_steps$t,temp_steps$y,default.units="native",gp=gpar(col=col[i]))
     grid.points(
       list_selectedtimepoints[[i]]$time,
@@ -1823,4 +1849,8 @@ grid.plot.surv.list<-function(
   grid.text(label=main,y=unit(1,"npc")+unit(1.5,"line"),gp=gpar(fontface="bold"))
 }
 
+library(survival)
+library(tidyverse)
+library(grid)
+grid.plot.surv.list(list(survfit(Surv(time, status) ~ sex, data = lung)),xlim=c(0,700))
 ```
