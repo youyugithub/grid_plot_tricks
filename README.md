@@ -1854,3 +1854,176 @@ library(tidyverse)
 library(grid)
 grid.plot.surv.list(list(survfit(Surv(time, status) ~ sex, data = lung)),xlim=c(0,700))
 ```
+
+
+```
+## not finished
+## donot use
+grid.plot.surv.list.mult.panel<-function(
+    ...,# list_survfit,
+    xlim=NULL,ylim=NULL,
+    xat=NULL,xlabel="Time",
+    yat=NULL,ylabel="Survival",
+    main="",
+    col="black"){
+  
+  list_of_list_survfit <- list(...)
+  
+  survfit_to_summary_list<-function(x,times){
+    x<-summary(x,times=times,extend=TRUE)
+    if(is.null(x$strata)){
+      df<-x[c("time", "n.risk", "n.event", "n.censor", "surv", "std.err", "cumhaz", "std.chaz", "lower", "upper")]%>%as.data.frame()
+      list_df<-list(df)
+    }else{
+      df<-x[c("time", "n.risk", "n.event", "n.censor", "surv", "std.err", "cumhaz", "std.chaz", "lower", "upper", "strata")]%>%as.data.frame()
+      list_df<-df%>%group_by(strata)%>%group_split()
+      names(list_df)<-df%>%group_by(strata)%>%group_keys()%>%pull(strata)
+    }
+    return(list_df)
+  }
+  
+  make_steps <- function(t, y, end=max(t)) {
+    
+    # Add origin
+    t <- c(0, t)
+    y <- c(1, y)
+    
+    # ---- Truncate if needed ----
+    if (end < max(t)) {
+      
+      # Keep times up to end
+      keep <- t <= end
+      t <- t[keep]
+      y <- y[keep]
+      
+      # Add end if not already present
+      if (tail(t, 1) < end) {
+        t <- c(t, end)
+        y <- c(y, tail(y, 1))  # carry forward survival
+      }
+      
+    } else if (end > max(t)) {
+      
+      # Extend flat to end
+      t <- c(t, end)
+      y <- c(y, tail(y, 1))
+    }
+    
+    # ---- Create step representation ----
+    n <- length(t)
+    step_t <- rep(t, each = 2)[-1]
+    step_y <- rep(y, each = 2)[-2 * n]
+    
+    list(t = step_t, y = step_y)
+  }
+  
+  # Set default xlim and ylim if NULL
+  if(is.null(xlim))xlim<-c(0,max(sapply(list_survfit,function(x)max(x$time,na.rm=T)),na.rm=T))
+  if(is.null(ylim))ylim<-c(0,1)
+  selectedtimepoints<-pretty(xlim);selectedtimepoints<-selectedtimepoints[selectedtimepoints>=min(xlim)&selectedtimepoints<=max(xlim)]
+  
+  # list_alltimepoints<-
+  #   lapply(list_survfit,function(x)survfit_to_summary_list(x))%>%
+  #   list_flatten(name_spec="{outer} {inner}")
+  
+  grid.newpage()
+  pushViewport(plotViewport(margins=c(4.1,4.1,3.1,1.1)))
+  pushViewport(viewport(layout=grid.layout(ncol=length(list_of_list_survfit))))
+  
+  for(panel in 1:length(list_of_list_survfit)){
+    
+    list_survfit<-list_of_list_survfit[[panel]]
+    
+    list_alltimepoints<-
+      lapply(list_survfit,function(x)survfit_to_summary_list(x))%>%
+      list_flatten(name_spec="{outer} {inner}")
+    
+    # selectedtimepoints<-pretty(xlim);selectedtimepoints<-selectedtimepoints[selectedtimepoints>=min(xlim)&selectedtimepoints<=max(xlim)]
+    list_selectedtimepoints<-
+      lapply(list_survfit,function(x)survfit_to_summary_list(x,times=selectedtimepoints))%>%
+      list_flatten(name_spec="{outer} {inner}")
+    
+    n_curve<-length(list_alltimepoints)
+    col<-rep(col,length.out=n_curve)
+    
+    # Create the main viewport with data scaling
+    pushViewport(dataViewport(layout.pos.col=panel,xData=xlim,yData=ylim))
+    pushViewport(viewport(
+      width=unit(1,"npc")-unit(1,"line"),
+      layout=grid.layout(nrow=n_curve+1,heights=unit(c(1,rep(1.5,n_curve)),c("null",rep("line",n_curve))))))
+    
+    pushViewport(dataViewport(xData=xlim,yData=ylim,layout.pos.row=1))
+    pushViewport(dataViewport(xData=xlim,yData=ylim,clip=T))
+    grid.rect()
+    for(i in 1:length(list_alltimepoints)){
+      temp_steps<-make_steps(list_alltimepoints[[i]]$time,list_alltimepoints[[i]]$surv,xlim[2])
+      grid.lines(temp_steps$t,temp_steps$y,default.units="native",gp=gpar(col=col[i]))
+      grid.points(
+        list_selectedtimepoints[[i]]$time,
+        list_selectedtimepoints[[i]]$surv,pch=16,size=unit(0.2,"char"))
+      grid.text(
+        sprintf("%.2f",list_selectedtimepoints[[i]]$surv[-1]),
+        x=unit(list_selectedtimepoints[[i]]$time[-1],"native"),
+        y=unit(list_selectedtimepoints[[i]]$surv[-1],"native")-unit(0.1,"line"),
+        gp=gpar(cex=0.75),just="top")
+    }
+    
+    myborder<-unit(c(0.2,0.5,0.2,0.5),"lines")
+    strings<-paste0(LETTERS[1:n_curve],". ",names(list_alltimepoints))
+    mylegend1<-frameGrob()
+    symbolvp<-viewport(width=unit(1,"lines"))
+    for(i in 1:n_curve){
+      mylegend1<-packGrob(mylegend1,linesGrob(x=c(0,1),y=c(0.5,0.5),vp=symbolvp,gp=gpar(col=col[i],lwd=1.5)),row=i,col=1,border=myborder)
+      mylegend1<-packGrob(mylegend1,textGrob(strings[i],x=0,just="left",gp=gpar(col=col[i])),row=i,col=2,border=myborder)
+    }
+    pushViewport(viewport(
+      x=0,y=0,
+      width=unit(1,"grobwidth",mylegend1)+unit(1,"lines"),
+      height=unit(1,"grobheight",mylegend1)+unit(1,"lines"),
+      just=c(0,0)))
+    grid.draw(mylegend1)
+    popViewport()
+    
+    popViewport()
+    
+    grid.text(label=ylabel,x=unit(0,"npc")-unit(3,"line"),rot=90)
+    suppressWarnings(grid.yaxis(
+      edits=gEditList(
+        gEdit(gPath="ticks",x1=unit(-0.25,"line")),
+        gEdit(gPath="labels",x=unit(-0.5,"line")))))
+    popViewport()
+    for(i in 1:length(list_alltimepoints)){
+      pushViewport(dataViewport(xData=xlim,yData=c(0,1),layout.pos.row=i+1))
+      grid.rect()
+      grid.text(
+        list_selectedtimepoints[[i]]$n.risk,
+        x=unit(list_selectedtimepoints[[i]]$time,"native"),
+        gp=gpar(cex=0.8))
+      grid.text(LETTERS[i],x=unit(0,"npc")-unit(0.5,"line"),gp=gpar(col=col[i]))
+      popViewport()
+    }
+    pushViewport(dataViewport(xData=xlim,yData=c(0,1),layout.pos.row=2:(1+n_curve)))
+    grid.text(label="At risk",x=unit(0,"npc")-unit(3,"line"),rot=90)
+    suppressWarnings(grid.xaxis(
+      edits=gEditList(
+        gEdit(gPath="ticks",y1=unit(-0.25,"line")),
+        gEdit(gPath="labels",y=unit(-1,"line")))))
+    popViewport()
+    popViewport()
+    popViewport()
+  }
+
+  # grid.text(label=xlabel,y=unit(0,"npc")-unit(2.5,"line"))
+  # grid.text(label=main,y=unit(1,"npc")+unit(1.5,"line"),gp=gpar(fontface="bold"))
+  
+}
+
+
+list_of_list_survfit<-list(
+  list(survfit(Surv(time, status) ~ sex, data = lung)),
+  list(survfit(Surv(time, status) ~ 1, data = lung)))
+
+grid.plot.surv.list.mult.panel(
+  list(survfit(Surv(time, status) ~ 1, data = lung)),
+  list(survfit(Surv(time, status) ~ sex, data = lung)))
+```
