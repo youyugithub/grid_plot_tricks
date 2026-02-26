@@ -1730,9 +1730,9 @@ grid.plot.surv.list<-function(
   }
   
   make_steps <- function(t, y) {
-    n <- length(t)
     t <- c(0, t)
     y <- c(1, y)
+    n <- length(t)
     step_t <- rep(t, each = 2)[-1]       # Skip first (0,1)
     step_y <- rep(y, each = 2)[-2 * n]   # Skip last
     list(t = step_t, y = step_y)
