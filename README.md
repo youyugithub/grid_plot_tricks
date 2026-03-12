@@ -2027,3 +2027,41 @@ grid.plot.surv.list.mult.panel(
   list(survfit(Surv(time, status) ~ 1, data = lung)),
   list(survfit(Surv(time, status) ~ sex, data = lung)))
 ```
+
+## Best legend example function
+```
+
+grid_legend<-function(symbol_list,text_list,just=c(0,0)){
+  symbol_cells <- lapply(symbol_list, function(g) {
+    gTree(children=gList(gTree(
+      children = gList(applyEdit(g,gEdit(vp=viewport(
+        width=unit(1,"line"),height=unit(1,"line"))))))))})
+  text_cell<-lapply(seq_along(mylines),function(i)textGrob(mylines[[i]],x=0,just="left"))
+  myborder<-unit(c(0.25,0.5,0.25,0.5),"lines")
+  mylegend<-frameGrob()
+  for(i in 1:3){
+    mylegend<-packGrob(mylegend,symbol_cells[[i]],row=i,col=1,border=myborder)
+    mylegend<-packGrob(mylegend,text_cell[[i]],row=i,col=2,border=myborder)
+  }
+  pushViewport(viewport(
+    x=just[1],y=just[2],
+    width=unit(1,"grobwidth",mylegend)+unit(1,"lines"),
+    height=unit(1,"grobheight",mylegend)+unit(1,"lines"),
+    just=just))
+  grid.draw(mylegend)
+  popViewport()
+}
+
+symbol_list<-list(
+  rectGrob(),
+  linesGrob(x=c(0,1),y=c(0.5,0.5)),
+  pointsGrob(x=0.5,y=0.5))
+
+text_list<-list("AAA","BBBBB","CCCCCCC")
+
+dev.off()
+grid_legend(symbol_list,text_list)
+grid_legend(symbol_list,text_list,c(0.5,1))
+grid_legend(symbol_list,text_list,c(0,1))
+grid_legend(symbol_list,text_list,c(1,0))
+```
